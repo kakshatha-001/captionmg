@@ -1,4 +1,4 @@
-async function processImage() {
+document.getElementById('captionBtn').addEventListener('click', async function() {
     const fileInput = document.getElementById('fileInput');
     const outputDiv = document.getElementById('output');
     
@@ -27,4 +27,4 @@ async function processImage() {
         console.error('Error:', error);
         outputDiv.innerText = 'An error occurred.';
     }
-}
+});
