@@ -4,3 +4,6 @@ transformers
 pillow
 opencv-python
 gtts
+Flask
+GTTS
+Pillow
