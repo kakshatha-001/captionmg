@@ -3,96 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Caption Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        input[type="file"] {
-            margin-bottom: 20px;
-        }
-        button[type="submit"] {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-        .output {
-            text-align: center;
-            margin-top: 30px;
-        }
-        .output img {
-            max-width: 100%;
-            height: auto;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <title>Image Captioning</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Image Caption Generator</h1>
-        <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" name="file" accept="image/*">
-            <button type="submit">Upload Image</button>
-        </form>
-        <div class="output" id="output"></div>
-    </div>
-
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            var formData = new FormData(this);
-            fetch('/predict', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                var outputDiv = document.getElementById('output');
-                outputDiv.innerHTML = '';
-                if (data.error) {
-                    outputDiv.innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
-                } else {
-                    outputDiv.innerHTML = '<img src="' + data.image_path + '" alt="Uploaded Image">' +
-                                          '<p>' + data.caption + '</p>' +
-                                          '<audio controls>' +
-                                            '<source src="' + data.audio_path + '" type="audio/mpeg">' +
-                                            'Your browser does not support the audio element.' +
-                                          '</audio>';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
-    </script>
+    <input type="file" id="fileInput">
+    <button onclick="processImage()">Caption Image</button>
+    <div id="output"></div>
+    
+    <script src="script.js"></script>
 </body>
 </html>
