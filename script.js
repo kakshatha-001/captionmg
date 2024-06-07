@@ -1,30 +1,22 @@
-document.getElementById('captionButton').addEventListener('click', async () => {
-    const fileInput = document.getElementById('fileInput');
-    const outputDiv = document.getElementById('output');
-    
-    const file = fileInput.files[0];
-    if (!file) {
-        outputDiv.innerText = 'Please select an image.';
-        return;
-    }
-    
+document.getElementById('upload-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const fileInput = document.getElementById('file-input');
     const formData = new FormData();
-    formData.append('image', file);
-    
-    try {
-        const response = await fetch('/process_image', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to process image.');
-        }
-        
-        const data = await response.json();
-        outputDiv.innerText = `Caption: ${data.caption}`;
-    } catch (error) {
-        console.error('Error:', error);
-        outputDiv.innerText = 'An error occurred.';
+    formData.append('file', fileInput.files[0]);
+
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.error) {
+        alert(result.error);
+    } else {
+        document.getElementById('caption').textContent = result.caption;
+        const audio = document.getElementById('audio');
+        audio.src = result.audio_url;
+        audio.load();
     }
 });
