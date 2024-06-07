@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify
 import os
+from flask import Flask, request, jsonify
 import cv2
 import torch
 from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
 from PIL import Image
-import numpy as np
 
 app = Flask(__name__)
 
@@ -35,15 +34,17 @@ def preprocess_image(image_path):
     pil_image = Image.fromarray(cv2.cvtColor(enhanced_image, cv2.COLOR_BGR2RGB))
     return pil_image
 
-def predict_caption(image_paths):
-    images = [preprocess_image(image_path) for image_path in image_paths]
-    pixel_values = feature_extractor(images=images, return_tensors="pt").pixel_values
+def predict_caption(image_path):
+    image = preprocess_image(image_path)
+    if not image:
+        return None
+    
+    pixel_values = feature_extractor(images=[image], return_tensors="pt").pixel_values
     pixel_values = pixel_values.to(device)
     with torch.no_grad():
         output_ids = model.generate(pixel_values, **gen_kwargs)
-    preds = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-    preds = [pred.strip() for pred in preds]
-    return preds
+    caption = tokenizer.decode(output_ids[0], skip_special_tokens=True).strip()
+    return caption
 
 @app.route('/process_image', methods=['POST'])
 def process_image():
@@ -52,10 +53,12 @@ def process_image():
 
     file = request.files['image']
     filename = file.filename
-    file.save(filename)
-    predictions = predict_caption([filename])
-    os.remove(filename)
-    return jsonify({'caption': predictions[0]})
+    file_path = os.path.join('uploads', filename)
+    file.save(file_path)
+    caption = predict_caption(file_path)
+    os.remove(file_path)
+    return jsonify({'caption': caption}) if caption else jsonify({'error': 'Failed to process image'})
 
 if __name__ == '__main__':
+    os.makedirs('uploads', exist_ok=True)
     app.run(debug=True)
