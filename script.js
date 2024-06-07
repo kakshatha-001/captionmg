@@ -1,4 +1,4 @@
-document.getElementById('captionBtn').addEventListener('click', async function() {
+document.getElementById('captionButton').addEventListener('click', async () => {
     const fileInput = document.getElementById('fileInput');
     const outputDiv = document.getElementById('output');
     
