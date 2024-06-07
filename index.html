@@ -7,10 +7,19 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <input type="file" id="fileInput">
-    <button id="captionButton">Caption Image</button>
-    <div id="output"></div>
-    
+    <div class="container">
+        <h1>Image Captioning and Speech Synthesis</h1>
+        <form id="upload-form">
+            <input type="file" id="file-input" name="file" accept="image/*" required>
+            <button type="submit">Upload and Generate Caption</button>
+        </form>
+        <div id="result">
+            <h2>Caption:</h2>
+            <p id="caption"></p>
+            <h2>Audio:</h2>
+            <audio id="audio" controls></audio>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
