@@ -4,21 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Captioning</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Image Captioning</h1>
-        <form id="upload-form" action="/" method="post" enctype="multipart/form-data">
-            <input type="file" id="file-input" name="file" accept="image/*">
-            <button type="submit">Upload</button>
-        </form>
-        <div id="output">
-            {% if predictions %}
-                <p>{{ predictions }}</p>
-            {% endif %}
-        </div>
-    </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <h1>Upload an Image</h1>
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput">
+        <input type="submit" value="Upload">
+    </form>
+    <div id="captionContainer"></div>
+    <audio controls id="audioPlayer" style="display: none;"></audio>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var formData = new FormData();
+            formData.append('file', document.getElementById('fileInput').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display caption
+                document.getElementById('captionContainer').innerText = 'Caption: ' + data.caption;
+
+                // Play audio
+                var audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = 'data:audio/mpeg;base64,' + data.audio;
+                audioPlayer.style.display = 'block';
+                audioPlayer.play();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
 </body>
 </html>
