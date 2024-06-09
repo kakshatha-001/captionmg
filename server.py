@@ -1,18 +1,18 @@
 import os
 import cv2
 import torch
-from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
+from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 from PIL import Image
 import numpy as np
 from gtts import gTTS
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from IPython.display import Audio, display
 
 app = Flask(__name__)
 
-# Load pre-trained model, feature extractor, and tokenizer
+# Load pre-trained model, image processor, and tokenizer
 model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-feature_extractor = ViTFeatureExtractor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+image_processor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -55,8 +55,8 @@ def predict_step(image):
     preprocessed_image = preprocess_image(image)
 
     # Extract features and generate captions
-    pixel_values = feature_extractor(images=preprocessed_image, return_tensors="pt").pixel_values
-    pixel_values = pixel_values.to(device)
+    inputs = image_processor(images=preprocessed_image, return_tensors="pt")
+    pixel_values = inputs.pixel_values.to(device)
 
     with torch.no_grad():
         output_ids = model.generate(pixel_values, **gen_kwargs)
