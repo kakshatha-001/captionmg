@@ -7,24 +7,22 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
+            text-align: center;
         }
         h1 {
-            text-align: center;
-            color: #333;
+            text-align:center;
+            margin-bottom: 20px;
         }
         form {
-            text-align: center;
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
         }
         input[type="file"] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-bottom: 20px;
         }
-        button[type="submit"] {
+        button {
             padding: 10px 20px;
             background-color: #007bff;
             color: #fff;
@@ -32,61 +30,25 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        button[type="submit"]:hover {
+        button:hover {
             background-color: #0056b3;
         }
-        .caption-container {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .caption {
-            padding: 10px;
-            background-color: #ffffff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
+        #caption {
+            margin-top: 50px;
         }
     </style>
-    <script>
-        function displayCaption(caption) {
-            var captionContainer = document.createElement("div");
-            captionContainer.classList.add("caption");
-            captionContainer.innerText = caption;
-            document.querySelector(".caption-container").appendChild(captionContainer);
-        }
-    </script>
 </head>
 <body>
     <h1>Image Captioning</h1>
-    <form id="upload-form" action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*">
-        <button type="submit">Upload</button>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Upload & Predict</button>
     </form>
-    <div class="caption-container">
-        <!-- Captions will be displayed here -->
+    {% if predictions %}
+    <div id="caption">
+        <h2>Predicted Caption:</h2>
+        <p>{{ predictions }}</p>
     </div>
-    <script>
-        document.getElementById("upload-form").addEventListener("submit", function(event) {
-            event.preventDefault();
-            var formData = new FormData(this);
-            fetch("/", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.caption) {
-                    displayCaption(data.caption);
-                } else {
-                    alert("Failed to generate caption. Please try again.");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("An error occurred. Please try again later.");
-            });
-        });
-    </script>
+    {% endif %}
 </body>
 </html>
