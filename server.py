@@ -1,62 +1,71 @@
 import os
 import cv2
 import torch
-from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
+from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
 from PIL import Image
 import numpy as np
-from gtts import gTTS
 from flask import Flask, render_template, request
-from IPython.display import Audio, display
+from IPython.display import display, Javascript
+from google.colab.output import eval_js
+from base64 import b64decode
 
 app = Flask(__name__)
 
-# Load pre-trained model, image processor, and tokenizer
+# Load pre-trained model, feature extractor, and tokenizer
 model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-image_processor = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+feature_extractor = ViTFeatureExtractor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 # Set generation parameters with updated num_beams
-max_length = 30
+max_length = 25
 num_beams = 10  # Change this value to control the beam search width
 gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
 
-def preprocess_image(image):
+def take_photo(filename='photo.jpg', quality=1):
+    data = request.files['file'].read()
+    with open(filename, 'wb') as f:
+        f.write(data)
+    return filename
+
+def enhance_image(image_path):
+    # Read the image using OpenCV
+    image = cv2.imread(image_path)
+
+    if image is None:
+        print(f"Warning: {image_path} does not exist or could not be loaded.")
+        return None
+
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # Apply histogram equalization to improve contrast
     enhanced_gray = cv2.equalizeHist(gray)
 
-    # Convert to LAB color space
-    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    # Convert back to BGR
+    enhanced_image = cv2.cvtColor(enhanced_gray, cv2.COLOR_GRAY2BGR)
 
-    # Split the LAB image into channels
-    l, a, b = cv2.split(lab_image)
-
-    # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) to the L channel
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    clahe_l = clahe.apply(l)
-
-    # Merge the CLAHE-enhanced L channel with the original A and B channels
-    enhanced_lab = cv2.merge((clahe_l, a, b))
-
-    # Convert back to BGR color space
-    enhanced_image = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
-
-    # Convert from BGR format to RGB format
+    # Convert from OpenCV BGR format to PIL RGB format
     pil_image = Image.fromarray(cv2.cvtColor(enhanced_image, cv2.COLOR_BGR2RGB))
     return pil_image
 
-def predict_step(image):
-    # Preprocess the image
-    preprocessed_image = preprocess_image(image)
+def predict_step(image_paths):
+    images = []
+    for image_path in image_paths:
+        enhanced_image = enhance_image(image_path)
+        if enhanced_image:
+            images.append(enhanced_image)
+        else:
+            continue
+
+    if not images:
+        return []
 
     # Extract features and generate captions
-    inputs = image_processor(images=preprocessed_image, return_tensors="pt")
-    pixel_values = inputs.pixel_values.to(device)
+    pixel_values = feature_extractor(images=images, return_tensors="pt").pixel_values
+    pixel_values = pixel_values.to(device)
 
     with torch.no_grad():
         output_ids = model.generate(pixel_values, **gen_kwargs)
@@ -69,19 +78,13 @@ def predict_step(image):
 def index():
     if request.method == 'POST':
         # Get the uploaded image
-        uploaded_file = request.files['file']
-        if uploaded_file.filename != '':
-            image = cv2.imdecode(np.fromstring(uploaded_file.read(), np.uint8), cv2.IMREAD_COLOR)
-            predictions = predict_step(image)
-
-            # Convert caption to speech
-            tts = gTTS(predictions[0], lang='en')
-            tts.save('caption.mp3')
-
-            # Play audio
-            display(Audio('caption.mp3', autoplay=True))
-
+        photo_filename = take_photo()
+        if photo_filename:
+            # Predict captions for the captured image
+            predictions = predict_step([photo_filename])
             return render_template('index.html', predictions=predictions[0])
+        else:
+            return render_template('index.html', predictions=None)
     return render_template('index.html', predictions=None)
 
 if __name__ == '__main__':
