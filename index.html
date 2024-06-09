@@ -4,12 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Captioning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+        }
+        #container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin-top: 50px;
+        }
+        #image-container {
+            width: 400px;
+            height: auto;
+            border: 2px solid #333;
+            margin-bottom: 20px;
+        }
+        #caption {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1 align="center">Image Captioning</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*">
-        <button type="submit">Upload</button>
-    </form>
+    <h1>Image Captioning</h1>
+    <div id="container">
+        <div id="image-container">
+            <img id="uploaded-image" src="#" alt="Uploaded Image">
+        </div>
+        <p id="caption"></p>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileInput = document.querySelector('input[type="file"]');
+            const imageContainer = document.getElementById('image-container');
+            const uploadedImage = document.getElementById('uploaded-image');
+            const caption = document.getElementById('caption');
+
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    uploadedImage.src = e.target.result;
+                    caption.innerText = "Processing...";
+
+                    // Sending file to server for processing
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    fetch('/', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        caption.innerText = data;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        caption.innerText = "Error occurred!";
+                    });
+                };
+
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
 </body>
 </html>
