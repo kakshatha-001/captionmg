@@ -1,22 +1,19 @@
-document.getElementById('upload-form').addEventListener('submit', async function(event) {
-    event.preventDefault();
-    const fileInput = document.getElementById('file-input');
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('upload-form');
+    var fileInput = document.getElementById('file-input');
 
-    const response = await fetch('/upload', {
-        method: 'POST',
-        body: formData
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(form);
+        fetch('/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            var output = document.getElementById('output');
+            output.innerHTML = '<p>' + data + '</p>';
+        })
+        .catch(error => console.error('Error:', error));
     });
-
-    const result = await response.json();
-
-    if (result.error) {
-        alert(result.error);
-    } else {
-        document.getElementById('caption').textContent = result.caption;
-        const audio = document.getElementById('audio');
-        audio.src = result.audio_url;
-        audio.load();
-    }
 });
