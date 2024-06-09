@@ -4,51 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Captioning</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        h1 {
-            text-align:center;
-            margin-bottom: 20px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 50px;
-        }
-        input[type="file"] {
-            margin-bottom: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #caption {
-            margin-top: 50px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Image Captioning</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*" required>
-        <button type="submit">Upload & Predict</button>
-    </form>
-    {% if predictions %}
-    <div id="caption">
-        <h2>Predicted Caption:</h2>
-        <p>{{ predictions }}</p>
+    <div class="container">
+        <h1>Image Captioning</h1>
+        <form id="upload-form" action="/" method="post" enctype="multipart/form-data">
+            <input type="file" id="file-input" name="file" accept="image/*">
+            <button type="submit">Upload</button>
+        </form>
+        <div id="output">
+            {% if predictions %}
+                <p>{{ predictions }}</p>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
