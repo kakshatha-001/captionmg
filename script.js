@@ -1,8 +1,7 @@
-document.getElementById('upload-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
     var formData = new FormData();
-    formData.append('file', document.getElementById('file').files[0]);
+    formData.append('file', document.getElementById('fileInput').files[0]);
 
     fetch('/upload', {
         method: 'POST',
@@ -11,16 +10,13 @@ document.getElementById('upload-form').addEventListener('submit', function(event
     .then(response => response.json())
     .then(data => {
         // Display caption
-        document.getElementById('output').innerHTML = '<p><strong>Caption:</strong> ' + data.caption + '</p>';
+        document.getElementById('captionContainer').innerText = 'Caption: ' + data.caption;
 
         // Play audio
-        var audioBlob = new Blob([data.audio], { type: 'audio/mp3' });
-        var audioUrl = URL.createObjectURL(audioBlob);
-        var audio = new Audio(audioUrl);
-        audio.play();
+        var audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.src = 'static/caption.mp3';  // Audio file path
+        audioPlayer.style.display = 'block';
+        audioPlayer.play();
     })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('output').innerHTML = '<p>Error occurred. Please try again.</p>';
-    });
+    .catch(error => console.error('Error:', error));
 });
