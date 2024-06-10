@@ -1,3 +1,4 @@
+# server.py
 import os
 from flask import Flask, render_template, request, jsonify
 import cv2
@@ -6,7 +7,6 @@ from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTok
 from PIL import Image
 import numpy as np
 from gtts import gTTS
-from io import BytesIO
 
 app = Flask(__name__)
 
@@ -23,7 +23,14 @@ max_length = 30
 num_beams = 10  # Change this value to control the beam search width
 gen_kwargs = {"max_length": max_length, "num_beams": num_beams}
 
-def preprocess_image(image):
+def preprocess_image(image_path):
+    # Read the image using OpenCV
+    image = cv2.imread(image_path)
+
+    if image is None:
+        print(f"Warning: {image_path} does not exist or could not be loaded.")
+        return None
+
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -50,9 +57,20 @@ def preprocess_image(image):
     pil_image = Image.fromarray(cv2.cvtColor(enhanced_image, cv2.COLOR_BGR2RGB))
     return pil_image
 
-def predict_step(image):
+def predict_step(image_paths):
+    images = []
+    for image_path in image_paths:
+        preprocessed_image = preprocess_image(image_path)
+        if preprocessed_image:
+            images.append(preprocessed_image)
+        else:
+            continue
+
+    if not images:
+        return []
+
     # Extract features and generate captions
-    pixel_values = feature_extractor(images=image, return_tensors="pt").pixel_values
+    pixel_values = feature_extractor(images=images, return_tensors="pt").pixel_values
     pixel_values = pixel_values.to(device)
 
     with torch.no_grad():
@@ -67,35 +85,24 @@ def index():
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
-def upload():
+def upload_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'})
-
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'})
-
-    # Read image from file
-    image = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
-    if image is None:
-        return jsonify({'error': 'Invalid image'})
-
-    # Preprocess image
-    preprocessed_image = preprocess_image(image)
-    if preprocessed_image is None:
-        return jsonify({'error': 'Image preprocessing failed'})
-
-    # Predict captions
-    predictions = predict_step(preprocessed_image)
-
-    # Convert caption to speech
+    # Save the uploaded file temporarily
+    file_path = 'temp.jpg'
+    file.save(file_path)
+    # Process the uploaded image
+    predictions = predict_step([file_path])
+    if not predictions:
+        return jsonify({'error': 'Caption generation failed'})
     caption = predictions[0]
+    # Convert caption to speech
     tts = gTTS(caption, lang='en')
-    audio_buffer = BytesIO()
-    tts.write_to_fp(audio_buffer)
-
-    # Return response
-    return jsonify({'caption': caption, 'audio': audio_buffer.getvalue()})
+    tts.save('static/caption.mp3')  # Save audio file in the static folder
+    return jsonify({'caption': caption})
 
 if __name__ == '__main__':
     app.run(debug=True)
