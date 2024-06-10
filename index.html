@@ -7,37 +7,13 @@
 </head>
 <body>
     <h1>Upload an Image</h1>
-    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="fileInput">
-        <input type="submit" value="Upload">
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput">
+        <button type="submit">Upload</button>
     </form>
     <div id="captionContainer"></div>
     <audio controls id="audioPlayer" style="display: none;"></audio>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            var formData = new FormData();
-            formData.append('file', document.getElementById('fileInput').files[0]);
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Display caption
-                document.getElementById('captionContainer').innerText = 'Caption: ' + data.caption;
-
-                // Play audio
-                var audioPlayer = document.getElementById('audioPlayer');
-                audioPlayer.src = 'data:audio/mpeg;base64,' + data.audio;
-                audioPlayer.style.display = 'block';
-                audioPlayer.play();
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
